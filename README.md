@@ -1,39 +1,55 @@
 # Projeto - Cidades ESG Inteligentes
 
-API REST para cadastro e acompanhamento de **indicadores ESG** (Ambientais, Sociais e de Governança) de cidades, com ciclo de vida completo automatizado por práticas DevOps: containerização, orquestração, pipeline de CI/CD e deploy em dois ambientes na nuvem (**staging** e **produção**).
+## HealthTrack API — Prontuário Eletrônico Unificado e Centrado no Paciente
+
+Projeto acadêmico FIAP — 2TDS | Fase "Navegando pelo mundo DevOps"
+Estudante: **Natalia Santana Silva** | RM557347
+
+API REST desenvolvida na Fase 3 (Java Advanced com Spring Boot) e adaptada nesta fase para simular um ambiente de produção real, com **containerização, orquestração, pipeline de CI/CD e deploy automatizado em dois ambientes na nuvem (staging e produção)**.
 
 | Ambiente | URL | Branch |
 |---|---|---|
 | Staging | https://esg-api-9f1e-staging.azurewebsites.net | `develop` |
 | Produção | https://esg-api-9f1e-prod.azurewebsites.net | `main` |
 
-A rota `/` de cada ambiente informa o **ambiente** e a **versão** (SHA do commit) em execução; a documentação interativa fica em `/swagger-ui/index.html`.
+A rota `/` de cada ambiente informa o **ambiente** e a **versão** (SHA do commit) em execução; a documentação interativa fica em `/swagger-ui.html`.
 
-### Funcionalidades da API
+### Contexto ESG
 
-| Método | Rota | Descrição |
+| Dimensão | Aplicação |
+|---|---|
+| **Social (S)** | Acesso equitativo à saúde, redução de desperdício no SUS (~R$ 30 bi/ano em exames repetidos), democratização do histórico clínico |
+| **Governance (G)** | Segurança e privacidade de dados (LGPD), autenticação JWT com controle de acesso por perfil, controle do paciente sobre seu histórico |
+
+### Endpoints
+
+| Método | Endpoint | Acesso |
 |---|---|---|
-| GET | `/` | Ambiente e versão em execução |
-| GET/POST | `/cidades` | Lista (filtro `?uf=`) / cadastra cidades |
-| GET/PUT/DELETE | `/cidades/{id}` | Consulta / atualiza / remove cidade |
-| GET | `/cidades/{id}/resumo` | Resumo ESG: total de indicadores por pilar |
-| GET/POST | `/cidades/{id}/indicadores` | Lista (filtro `?pilar=`) / registra indicadores |
-| GET/PUT/DELETE | `/indicadores/{id}` | Consulta / atualiza / remove indicador |
-| GET | `/actuator/health` | Health check (Docker, Azure e pipeline) |
+| GET | `/` | Público — ambiente e versão |
+| POST | `/auth/login`, `/auth/register` | Público |
+| GET | `/pacientes?page=0&size=10&sort=nome`, `/pacientes/{id}` | Autenticado |
+| POST / PUT | `/pacientes`, `/pacientes/{id}` | ADMIN, MEDICO |
+| DELETE | `/pacientes/{id}` | ADMIN |
+| GET / POST | `/prontuarios/{pacienteId}`, `/prontuarios` | Autenticado / ADMIN, MEDICO |
+| GET / POST | `/exames/{pacienteId}/historico`, `/exames` | Autenticado / ADMIN, MEDICO |
+| GET | `/indicadores/desperdicio` | Autenticado — **Indicador ESG**: exames repetidos evitados e economia estimada |
+| GET | `/actuator/health` | Público — health check |
+
+**Usuários de teste** (criados pela migration V5): `admin@healthtrack.com` / `admin123` (ADMIN), `joao.silva@healthtrack.com` / `medico123` (MEDICO), `maria.oliveira@email.com` / `paciente123` (PACIENTE). Uma coleção do Postman está em `postman_collection.json`.
 
 ---
 
 ## Como executar localmente com Docker
 
-**Pré-requisitos:** Docker e Docker Compose.
+**Pré-requisitos:** Docker e Docker Compose (não é preciso ter Java ou Maven instalados — o build acontece dentro do container).
 
 ```bash
 # 1. Clonar o repositório
 git clone https://github.com/nataliassilva24/cidades-esg-inteligentes.git
 cd cidades-esg-inteligentes
 
-# 2. Criar o arquivo de variáveis de ambiente a partir do modelo
-cp .env.example .env        # ajuste as senhas se desejar
+# 2. Criar o arquivo de variáveis de ambiente a partir do modelo (ajuste as senhas e o JWT_SECRET)
+cp .env.example .env
 
 # 3. Construir a imagem e subir API + MySQL
 docker compose up -d --build
@@ -44,24 +60,22 @@ docker compose ps
 
 Acesse:
 - API: http://localhost:8080/
-- Swagger: http://localhost:8080/swagger-ui/index.html
+- Swagger: http://localhost:8080/swagger-ui.html
 - Health: http://localhost:8080/actuator/health
 
-Exemplo de uso:
+Exemplo de uso (login e consulta protegida):
 
 ```bash
-curl -X POST http://localhost:8080/cidades -H "Content-Type: application/json" \
-  -d '{"nome":"Curitiba","uf":"PR","populacao":1773000}'
+TOKEN=$(curl -s -X POST http://localhost:8080/auth/login -H "Content-Type: application/json" \
+  -d '{"email":"admin@healthtrack.com","senha":"admin123"}' | sed -E 's/.*"token":"([^"]+)".*/\1/')
 
-curl -X POST http://localhost:8080/cidades/1/indicadores -H "Content-Type: application/json" \
-  -d '{"pilar":"AMBIENTAL","nome":"Coleta seletiva","valor":42.5,"unidade":"%","dataReferencia":"2025-12-31"}'
-
-curl http://localhost:8080/cidades/1/resumo
+curl -H "Authorization: Bearer $TOKEN" http://localhost:8080/pacientes
+curl -H "Authorization: Bearer $TOKEN" http://localhost:8080/indicadores/desperdicio
 ```
 
 Para parar: `docker compose down` (os dados do MySQL permanecem no volume `mysql_data`; use `docker compose down -v` para apagá-los).
 
-Para rodar só os testes (sem Docker): `mvn test`.
+Para rodar só os testes (requer JDK 21): `mvn test`.
 
 ---
 
@@ -72,9 +86,9 @@ Para rodar só os testes (sem Docker): `mvn test`.
 ### Fluxo de branches (Git Flow simplificado)
 
 ```
-feature/*  ──PR──▶  develop  ──merge──▶  main
-   │                   │                   │
-   CI                CD → STAGING      CD → PRODUÇÃO (aprovação manual)
+feature/*  ──PR──▶  develop  ──PR/merge──▶  main
+   │                   │                      │
+   CI                CD → STAGING        CD → PRODUÇÃO (aprovação manual)
 ```
 
 ### Workflow `ci.yml` — Integração Contínua
@@ -82,7 +96,7 @@ Disparo: push em `feature/**` e Pull Requests para `develop`/`main`.
 
 1. Checkout do código (`actions/checkout`)
 2. Setup do Java 21 Temurin com cache Maven (`actions/setup-java`)
-3. **Build + testes automatizados** (`mvn clean verify` — 11 testes de integração com JUnit 5 + MockMvc + H2)
+3. **Build + testes automatizados** (`mvn clean verify` — 27 testes com JUnit 5, MockMvc, Mockito e Spring Security Test)
 4. Publicação do relatório de testes como artefato
 
 ### Workflow `cd.yml` — Entrega/Implantação Contínua
@@ -95,13 +109,13 @@ Disparo: push em `develop` ou `main`.
 | `deploy-staging` | (branch `develop`) Deploy da imagem no Web App de **staging** + *smoke test* em `/actuator/health` |
 | `deploy-production` | (branch `main`) Aguarda **aprovação manual** (GitHub Environment `production` com *required reviewers*), faz o deploy no Web App de **produção** + *smoke test* |
 
-Os dados sensíveis ficam fora do código: o *publish profile* de cada Web App é um **secret** do respectivo GitHub Environment, e as credenciais do banco são **App Settings** (variáveis de ambiente) de cada Web App.
+Os dados sensíveis ficam fora do código: o *publish profile* de cada Web App é um **secret** do respectivo GitHub Environment; as credenciais do banco e a chave JWT (diferente em cada ambiente) são **App Settings** (variáveis de ambiente) de cada Web App. O schema do banco é criado e versionado automaticamente pelo **Flyway** na subida da aplicação.
 
 ### Infraestrutura na nuvem
 Provisionada por script com Azure CLI (`infra/azure-setup.sh`), região **Chile Central** (região permitida pela política da assinatura Azure for Students):
 
 - Resource Group `rg-cidades-esg`
-- Azure Database for MySQL Flexible Server (Burstable B1ms) com os bancos `esg_staging` e `esg_prod`
+- Azure Database for MySQL Flexible Server (Burstable B1ms) com os bancos `healthtrack_staging` e `healthtrack_prod`
 - App Service Plan Linux B1 compartilhado
 - Web Apps `esg-api-9f1e-staging` e `esg-api-9f1e-prod`
 
@@ -168,7 +182,7 @@ ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
 - **Multi-stage build:** a imagem final contém só o JRE e o JAR (sem Maven nem código-fonte), ficando menor e com menos superfície de ataque.
 - **Cache de dependências:** o `pom.xml` é copiado antes do código, então as dependências só são baixadas novamente quando ele muda.
 - **Usuário não-root** na imagem de execução.
-- **Configuração 12-factor:** nenhuma credencial na imagem; banco, ambiente e versão vêm de variáveis de ambiente (`DATABASE_URL`, `DATABASE_USER`, `DATABASE_PWD`, `APP_ENV`, `APP_VERSION`).
+- **Configuração 12-factor:** nenhuma credencial na imagem; banco, chave JWT, ambiente e versão vêm de variáveis de ambiente (`DB_URL`, `DB_USER`, `DB_PASSWORD`, `JWT_SECRET`, `APP_ENV`, `APP_VERSION`).
 - **Health check** no Dockerfile, no Compose e no Azure (`/actuator/health`).
 - **Rastreabilidade:** cada imagem é marcada com o SHA do commit, que a API também expõe em `/`.
 
@@ -178,10 +192,21 @@ ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
 |---|---|
 | Serviços | `api` (build do Dockerfile) e `db` (MySQL 8.0) |
 | Volume | `mysql_data` — persiste os dados do banco entre reinicializações |
-| Rede | `esg-net` (bridge) — a API acessa o banco pelo nome `db`; o MySQL não é exposto para fora |
+| Rede | `healthtrack-net` (bridge) — a API acessa o banco pelo nome `db`; o MySQL não é exposto para fora |
 | Variáveis de ambiente | lidas do `.env` (modelo em `.env.example`) |
 | Dependência saudável | `depends_on: condition: service_healthy` — a API só sobe após o MySQL responder ao `mysqladmin ping` |
 | Reinício | `restart: unless-stopped` |
+
+### Adaptações em relação ao projeto original (Fase 3)
+
+| Antes | Depois | Motivo |
+|---|---|---|
+| Oracle FIAP (um único schema compartilhado) | MySQL 8 (container local e Azure Database for MySQL) | Bancos separados para staging e produção e ambiente local completo no Compose |
+| Migrations Flyway em SQL Oracle (sequences) | Migrations em SQL MySQL (`AUTO_INCREMENT`) e entidades com `GenerationType.IDENTITY` | Compatibilidade com o novo banco |
+| Compose só com a aplicação | Compose com aplicação + banco, volume, rede e health checks | Orquestração completa do ambiente |
+| Credenciais e chave JWT com valores padrão no `application.properties` | Somente variáveis de ambiente | Segurança (nada sensível versionado) |
+| Hashes de senha dos usuários de teste não correspondiam às senhas documentadas | Hashes BCrypt regenerados na migration V5 | Usuários de teste funcionais |
+| — | Endpoint público `/` com ambiente e versão | Evidência de qual versão está em cada ambiente |
 
 ---
 
@@ -203,9 +228,9 @@ ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
 
 ## Tecnologias utilizadas
 
-- **Linguagem/Framework:** Java 21, Spring Boot 3.5 (Web, Data JPA, Validation, Actuator), springdoc-openapi (Swagger)
-- **Banco de dados:** MySQL 8 (local e Azure Database for MySQL Flexible Server); H2 em memória nos testes
-- **Testes:** JUnit 5, Spring Boot Test, MockMvc
+- **Linguagem/Framework:** Java 21, Spring Boot 3.2 (Web, Data JPA, Validation, Security, Actuator), JWT (jjwt), Lombok, springdoc-openapi (Swagger)
+- **Banco de dados:** MySQL 8 (local via Docker e Azure Database for MySQL Flexible Server), Flyway (migrations)
+- **Testes:** JUnit 5, Spring Boot Test, MockMvc, Mockito, Spring Security Test
 - **Build:** Maven
 - **Containers:** Docker (multi-stage), Docker Compose
 - **CI/CD:** GitHub Actions, GitHub Environments (aprovação manual), GitHub Container Registry

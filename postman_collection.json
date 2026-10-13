@@ -1,0 +1,342 @@
+{
+  "info": {
+    "name": "HealthTrack API",
+    "description": "Prontuário Eletrônico Unificado — FIAP Startup One Fase 3",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "BASE_URL",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "TOKEN",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Autenticação",
+      "item": [
+        {
+          "name": "Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.token) {",
+                  "    pm.collectionVariables.set('TOKEN', json.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/auth/login",
+              "host": ["{{BASE_URL}}"],
+              "path": ["auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@healthtrack.com\",\n  \"senha\": \"admin123\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "Register",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var json = pm.response.json();",
+                  "if (json.token) {",
+                  "    pm.collectionVariables.set('TOKEN', json.token);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/auth/register",
+              "host": ["{{BASE_URL}}"],
+              "path": ["auth", "register"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Dr. Ana Costa\",\n  \"email\": \"ana.costa@healthtrack.com\",\n  \"senha\": \"medico456\",\n  \"tipoUsuario\": \"MEDICO\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Pacientes",
+      "item": [
+        {
+          "name": "Listar pacientes",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/pacientes?page=0&size=10&sort=nome",
+              "host": ["{{BASE_URL}}"],
+              "path": ["pacientes"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" },
+                { "key": "sort", "value": "nome" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Buscar paciente por ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/pacientes/1",
+              "host": ["{{BASE_URL}}"],
+              "path": ["pacientes", "1"]
+            }
+          }
+        },
+        {
+          "name": "Cadastrar paciente",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/pacientes",
+              "host": ["{{BASE_URL}}"],
+              "path": ["pacientes"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Carlos Souza\",\n  \"cpf\": \"871.263.170-30\",\n  \"dataNascimento\": \"1990-06-20\",\n  \"telefone\": \"(11) 91234-5678\",\n  \"email\": \"carlos.souza@email.com\",\n  \"endereco\": \"Av. Paulista, 500, São Paulo - SP\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "Atualizar paciente",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/pacientes/1",
+              "host": ["{{BASE_URL}}"],
+              "path": ["pacientes", "1"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Maria Oliveira Santos\",\n  \"cpf\": \"123.456.789-09\",\n  \"dataNascimento\": \"1985-03-15\",\n  \"telefone\": \"(11) 98765-4321\",\n  \"email\": \"maria.oliveira@email.com\",\n  \"endereco\": \"Rua das Flores, 200, São Paulo - SP\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "Remover paciente",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/pacientes/1",
+              "host": ["{{BASE_URL}}"],
+              "path": ["pacientes", "1"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Prontuários",
+      "item": [
+        {
+          "name": "Histórico clínico do paciente",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/prontuarios/1?page=0&size=5&sort=dataAtendimento,desc",
+              "host": ["{{BASE_URL}}"],
+              "path": ["prontuarios", "1"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "5" },
+                { "key": "sort", "value": "dataAtendimento,desc" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Registrar prontuário",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/prontuarios",
+              "host": ["{{BASE_URL}}"],
+              "path": ["prontuarios"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pacienteId\": 1,\n  \"medicoId\": 2,\n  \"dataAtendimento\": \"2024-05-10\",\n  \"diagnostico\": \"Diabetes tipo 2 com controle glicêmico adequado\",\n  \"prescricao\": \"Metformina 850mg 2x ao dia com refeições\",\n  \"observacoes\": \"Paciente orientada sobre dieta e exercícios. Retorno em 3 meses.\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Exames",
+      "item": [
+        {
+          "name": "Histórico de exames do paciente",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/exames/1/historico?page=0&size=10&sort=dataRealizacao,desc",
+              "host": ["{{BASE_URL}}"],
+              "path": ["exames", "1", "historico"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "10" },
+                { "key": "sort", "value": "dataRealizacao,desc" }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Registrar exame",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/exames",
+              "host": ["{{BASE_URL}}"],
+              "path": ["exames"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"pacienteId\": 1,\n  \"tipoExame\": \"SANGUE\",\n  \"descricao\": \"Glicemia em Jejum\",\n  \"dataRealizacao\": \"2024-05-08\",\n  \"resultado\": \"98 mg/dL dentro do padrão normal\",\n  \"laboratorio\": \"Laboratório Hermes Pardini\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Indicadores ESG",
+      "item": [
+        {
+          "name": "Desperdício evitado",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/indicadores/desperdicio",
+              "host": ["{{BASE_URL}}"],
+              "path": ["indicadores", "desperdicio"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Erros",
+      "item": [
+        {
+          "name": "404 paciente inexistente",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/pacientes/99999",
+              "host": ["{{BASE_URL}}"],
+              "path": ["pacientes", "99999"]
+            }
+          }
+        },
+        {
+          "name": "400 validação campos inválidos",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{TOKEN}}" }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/pacientes",
+              "host": ["{{BASE_URL}}"],
+              "path": ["pacientes"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"\",\n  \"cpf\": \"111.111.111-11\",\n  \"dataNascimento\": \"2030-01-01\"\n}",
+              "options": { "raw": { "language": "json" } }
+            }
+          }
+        },
+        {
+          "name": "401 sem token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/pacientes",
+              "host": ["{{BASE_URL}}"],
+              "path": ["pacientes"]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
