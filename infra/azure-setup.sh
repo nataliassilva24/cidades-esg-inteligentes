@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# Provisiona a infraestrutura Azure do projeto Cidades ESG Inteligentes:
+# Provisiona a infraestrutura Azure do projeto Cidades ESG Inteligentes (HealthTrack API):
 #   - Resource Group
-#   - Azure Database for MySQL Flexible Server (bancos esg_staging e esg_prod)
+#   - Azure Database for MySQL Flexible Server (bancos healthtrack_staging e healthtrack_prod)
 #   - App Service Plan Linux B1 (compartilhado)
 #   - 2 Web Apps for Containers: staging e production
 #
 # Pré-requisitos: Azure CLI logado (az login) na assinatura "Azure for Students".
 # Uso: GITHUB_USER=<seu-usuario> ./infra/azure-setup.sh
-# Os nomes gerados e a senha do banco ficam em .azure.env (NÃO versionado).
+# Os nomes gerados, a senha do banco e as chaves JWT ficam em .azure.env (NÃO versionado).
 set -euo pipefail
 
 : "${GITHUB_USER:?Informe o usuário do GitHub dono da imagem: GITHUB_USER=<usuario> $0}"
@@ -34,6 +34,12 @@ EOF
   source "$ENV_FILE"
 fi
 
+# Chave JWT própria de cada ambiente (gerada uma única vez)
+if [[ -z "${JWT_SECRET_STAGING:-}" ]]; then
+  printf "JWT_SECRET_STAGING=%s\nJWT_SECRET_PROD=%s\n" "$(openssl rand -hex 32)" "$(openssl rand -hex 32)" >>"$ENV_FILE"
+  source "$ENV_FILE"
+fi
+
 echo ">> Registrando provedores de recursos"
 az provider register -n Microsoft.Web --wait
 az provider register -n Microsoft.DBforMySQL --wait
@@ -48,7 +54,7 @@ if ! az mysql flexible-server show -g "$RG" -n "$MYSQL_SERVER" -o none 2>/dev/nu
     --tier Burstable --sku-name Standard_B1ms --storage-size 20 --version 8.0.21 \
     --public-access 0.0.0.0 --yes -o none   # 0.0.0.0 = só serviços do Azure
 fi
-for db in esg_staging esg_prod; do
+for db in healthtrack_staging healthtrack_prod; do
   az mysql flexible-server db create -g "$RG" -s "$MYSQL_SERVER" -d "$db" -o none
 done
 
@@ -56,7 +62,7 @@ echo ">> App Service Plan $PLAN (Linux B1)"
 az appservice plan create -g "$RG" -n "$PLAN" -l "$LOCATION" --is-linux --sku B1 -o none
 
 create_webapp() {
-  local app=$1 ambiente=$2 db=$3 tag=$4
+  local app=$1 ambiente=$2 db=$3 tag=$4 jwt=$5
   echo ">> Web App $app ($ambiente)"
   if ! az webapp show -g "$RG" -n "$app" -o none 2>/dev/null; then
     # Algumas versões do Azure CLI falham num passo opcional pós-criação (leitura do FTP/publish profile);
@@ -68,9 +74,10 @@ create_webapp() {
   az webapp config appsettings set -g "$RG" -n "$app" -o none --settings \
     WEBSITES_PORT=8080 \
     APP_ENV="$ambiente" \
-    DATABASE_URL="jdbc:mysql://$MYSQL_SERVER.mysql.database.azure.com:3306/$db?sslMode=REQUIRED&serverTimezone=UTC" \
-    DATABASE_USER="$MYSQL_ADMIN" \
-    DATABASE_PWD="$MYSQL_PASSWORD"
+    DB_URL="jdbc:mysql://$MYSQL_SERVER.mysql.database.azure.com:3306/$db?sslMode=REQUIRED&serverTimezone=UTC" \
+    DB_USER="$MYSQL_ADMIN" \
+    DB_PASSWORD="$MYSQL_PASSWORD" \
+    JWT_SECRET="$jwt"
 
   az webapp config set -g "$RG" -n "$app" -o none \
     --always-on true --generic-configurations '{"healthCheckPath": "/actuator/health"}'
@@ -80,8 +87,8 @@ create_webapp() {
     --parent "sites/$app" -n scm --set properties.allow=true -o none
 }
 
-create_webapp "$APP_STAGING" staging    esg_staging staging
-create_webapp "$APP_PROD"    production esg_prod    production
+create_webapp "$APP_STAGING" staging    healthtrack_staging staging    "$JWT_SECRET_STAGING"
+create_webapp "$APP_PROD"    production healthtrack_prod    production "$JWT_SECRET_PROD"
 
 echo
 echo "Infra pronta:"
