@@ -1,0 +1,35 @@
+# Integração Contínua: compila e executa os testes automatizados
+# em todo push de branch de feature e em todo Pull Request para develop/main.
+name: CI - Build e Testes
+
+on:
+  push:
+    branches: ["feature/**"]
+  pull_request:
+    branches: [develop, main]
+
+jobs:
+  build-and-test:
+    name: Build + Testes (Maven)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Git Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java SDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Build e testes automatizados
+        run: mvn -B clean verify
+
+      - name: Publicar relatório de testes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: relatorio-testes
+          path: target/surefire-reports/
