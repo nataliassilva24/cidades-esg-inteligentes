@@ -1,0 +1,32 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Página (Spring Page) de PacienteResponse",
+  "type": "object",
+  "required": ["content", "totalElements", "totalPages", "size", "number", "first", "last", "empty"],
+  "properties": {
+    "content": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "nome", "cpf", "dataNascimento"],
+        "properties": {
+          "id":             { "type": "integer" },
+          "nome":           { "type": "string" },
+          "cpf":            { "type": "string" },
+          "dataNascimento": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+          "telefone":       { "type": ["string", "null"] },
+          "email":          { "type": ["string", "null"] },
+          "endereco":       { "type": ["string", "null"] }
+        },
+        "additionalProperties": false
+      }
+    },
+    "totalElements": { "type": "integer", "minimum": 0 },
+    "totalPages":    { "type": "integer", "minimum": 0 },
+    "size":          { "type": "integer", "minimum": 1 },
+    "number":        { "type": "integer", "minimum": 0 },
+    "first":         { "type": "boolean" },
+    "last":          { "type": "boolean" },
+    "empty":         { "type": "boolean" }
+  }
+}

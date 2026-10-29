@@ -1,0 +1,17 @@
+# Serviço adicional que roda os testes BDD dentro da mesma rede da API.
+# Uso (na raiz do projeto):
+#   docker compose -f docker-compose.yml -f testes-bdd/docker-compose.testes.yml up --build \
+#     --abort-on-container-exit --exit-code-from testes
+services:
+  testes:
+    build: ./testes-bdd
+    container_name: healthtrack-testes-bdd
+    depends_on:
+      api:
+        condition: service_healthy
+    environment:
+      BASE_URL: http://api:8080
+    volumes:
+      - ./testes-bdd/target/cucumber-reports:/opt/testes/target/cucumber-reports
+    networks:
+      - healthtrack-net
