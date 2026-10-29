@@ -118,6 +118,14 @@ mvn clean test -DbaseUrl=http://localhost:8080 -Dcucumber.filter.tags="@negativo
 
 > O script cria o arquivo `.env` a partir do `.env.example` caso ele não exista.
 
+## Solução de problemas
+
+| Sintoma | Causa | Solução |
+|---|---|---|
+| API não sobe e o log mostra `Access denied for user 'healthtrack_app'` | Existe um volume do MySQL de uma execução anterior criado com outra senha | `docker compose down -v` (apaga o volume local) e execute novamente |
+| `port is already allocated` na porta 8080 | Outro serviço usando a porta | `APP_PORT=8081 ./testes-bdd/run-tests.sh` |
+| Cenários "a mais" ou antigos aparecem na execução | Classes compiladas antigas em `target/` | Use `mvn clean test` (o script já faz isso) |
+
 ## Relatórios
 
 Após a execução:
