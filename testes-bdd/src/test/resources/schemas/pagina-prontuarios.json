@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Página (Spring Page) de ProntuarioResponse",
+  "type": "object",
+  "required": ["content", "totalElements", "totalPages", "size", "number", "first", "last", "empty"],
+  "properties": {
+    "content": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "pacienteId", "nomePaciente", "medicoId", "nomeMedico", "dataAtendimento", "diagnostico"],
+        "properties": {
+          "id":              { "type": "integer" },
+          "pacienteId":      { "type": "integer" },
+          "nomePaciente":    { "type": "string" },
+          "medicoId":        { "type": "integer" },
+          "nomeMedico":      { "type": "string" },
+          "dataAtendimento": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+          "diagnostico":     { "type": "string" },
+          "prescricao":      { "type": ["string", "null"] },
+          "observacoes":     { "type": ["string", "null"] }
+        },
+        "additionalProperties": false
+      }
+    },
+    "totalElements": { "type": "integer", "minimum": 0 },
+    "totalPages":    { "type": "integer", "minimum": 0 },
+    "size":          { "type": "integer", "minimum": 1 },
+    "number":        { "type": "integer", "minimum": 0 },
+    "first":         { "type": "boolean" },
+    "last":          { "type": "boolean" },
+    "empty":         { "type": "boolean" }
+  }
+}

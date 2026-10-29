@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Info - identificação do ambiente e versão",
+  "type": "object",
+  "required": ["aplicacao", "ambiente", "versao", "documentacao"],
+  "properties": {
+    "aplicacao":    { "type": "string", "enum": ["HealthTrack API"] },
+    "ambiente":     { "type": "string", "minLength": 1 },
+    "versao":       { "type": "string", "minLength": 1 },
+    "documentacao": { "type": "string", "pattern": "^/swagger-ui" }
+  },
+  "additionalProperties": false
+}

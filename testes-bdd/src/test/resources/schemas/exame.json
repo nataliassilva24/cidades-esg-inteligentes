@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "ExameResponse",
+  "type": "object",
+  "required": ["id", "pacienteId", "nomePaciente", "tipoExame", "descricao", "dataRealizacao"],
+  "properties": {
+    "id":             { "type": "integer", "minimum": 1 },
+    "pacienteId":     { "type": "integer", "minimum": 1 },
+    "nomePaciente":   { "type": "string", "minLength": 1 },
+    "tipoExame":      { "type": "string", "enum": ["SANGUE", "IMAGEM", "URINA", "CARDIOLOGICO", "OUTROS"] },
+    "descricao":      { "type": "string", "minLength": 1, "maxLength": 500 },
+    "dataRealizacao": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+    "resultado":      { "type": ["string", "null"], "maxLength": 1000 },
+    "laboratorio":    { "type": ["string", "null"], "maxLength": 200 }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "Página (Spring Page) de ExameResponse",
+  "type": "object",
+  "required": ["content", "totalElements", "totalPages", "size", "number", "first", "last", "empty"],
+  "properties": {
+    "content": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "pacienteId", "nomePaciente", "tipoExame", "descricao", "dataRealizacao"],
+        "properties": {
+          "id":             { "type": "integer" },
+          "pacienteId":     { "type": "integer" },
+          "nomePaciente":   { "type": "string" },
+          "tipoExame":      { "type": "string", "enum": ["SANGUE", "IMAGEM", "URINA", "CARDIOLOGICO", "OUTROS"] },
+          "descricao":      { "type": "string" },
+          "dataRealizacao": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+          "resultado":      { "type": ["string", "null"] },
+          "laboratorio":    { "type": ["string", "null"] }
+        },
+        "additionalProperties": false
+      }
+    },
+    "totalElements": { "type": "integer", "minimum": 0 },
+    "totalPages":    { "type": "integer", "minimum": 0 },
+    "size":          { "type": "integer", "minimum": 1 },
+    "number":        { "type": "integer", "minimum": 0 },
+    "first":         { "type": "boolean" },
+    "last":          { "type": "boolean" },
+    "empty":         { "type": "boolean" }
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "PacienteResponse",
+  "type": "object",
+  "required": ["id", "nome", "cpf", "dataNascimento"],
+  "properties": {
+    "id":             { "type": "integer", "minimum": 1 },
+    "nome":           { "type": "string", "minLength": 2, "maxLength": 150 },
+    "cpf":            { "type": "string", "pattern": "^\\d{3}\\.?\\d{3}\\.?\\d{3}-?\\d{2}$" },
+    "dataNascimento": { "type": "string", "pattern": "^\\d{4}-\\d{2}-\\d{2}$" },
+    "telefone":       { "type": ["string", "null"] },
+    "email":          { "type": ["string", "null"] },
+    "endereco":       { "type": ["string", "null"], "maxLength": 300 }
+  },
+  "additionalProperties": false
+}

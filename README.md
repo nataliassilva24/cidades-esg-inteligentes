@@ -14,6 +14,17 @@ API REST desenvolvida na Fase 3 (Java Advanced com Spring Boot). Nesta fase ela 
 
 A rota `/` de cada ambiente mostra o nome do ambiente e a versão em execução (SHA do commit). O Swagger fica em `/swagger-ui.html`.
 
+> **Testes automatizados BDD (fase "Testes Automatizados")** — a suíte de testes BDD com Gherkin/Cucumber
+> e os testes de API (status code, corpo JSON e contrato JSON Schema) de todos os endpoints está na pasta
+> [`testes-bdd/`](testes-bdd/README.md). Para executar tudo com um comando (só precisa de Docker):
+>
+> ```bash
+> ./testes-bdd/run-tests.sh --docker
+> ```
+>
+> Instruções completas, cobertura de endpoints e relatórios: [`testes-bdd/README.md`](testes-bdd/README.md).
+> Documentação com os cenários e as evidências: [`testes-bdd/docs/Documentacao-Testes-BDD.pdf`](testes-bdd/docs/Documentacao-Testes-BDD.pdf).
+
 ### Contexto ESG
 
 | Dimensão | Aplicação |
