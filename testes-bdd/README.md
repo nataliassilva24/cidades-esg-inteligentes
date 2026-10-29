@@ -1,5 +1,10 @@
 # Testes Automatizados BDD — HealthTrack API (Cidades ESG Inteligentes)
 
+[![Testes BDD e de API](https://github.com/nataliassilva24/cidades-esg-inteligentes/actions/workflows/bdd-tests.yml/badge.svg?branch=feature%2Ftestes-bdd)](https://github.com/nataliassilva24/cidades-esg-inteligentes/actions/workflows/bdd-tests.yml)
+
+> Documentação completa (cenários Gherkin, passo a passo de configuração e evidências de execução):
+> [`docs/Documentacao-Testes-BDD.pdf`](docs/Documentacao-Testes-BDD.pdf) — prints em [`docs/evidencias/`](docs/evidencias/).
+
 Suíte de testes automatizados da **HealthTrack API** usando **BDD (Behavior Driven Development)** com
 **Gherkin**, executada pelo **Cucumber**. Os testes chamam a API real (com MySQL) e validam, para
 todos os endpoints:
@@ -126,11 +131,25 @@ Após a execução:
 O workflow `.github/workflows/bdd-tests.yml` roda a cada push em `feature/**`, `develop` e `main`,
 em Pull Requests e manualmente (*workflow_dispatch*). Etapas:
 
-1. gera um `.env` com segredos aleatórios só para a execução;
+1. gera um `.env` com segredos aleatórios só para a execução (não é preciso cadastrar *secrets* nem
+   *environments* no GitHub);
 2. sobe API + MySQL com Docker Compose e aguarda o `/actuator/health`;
-3. executa `mvn test` na pasta `testes-bdd`;
+3. executa `mvn clean test` na pasta `testes-bdd`;
 4. publica o relatório do Cucumber como artefato (`relatorio-bdd`);
 5. derruba o ambiente.
+
+Execuções: <https://github.com/nataliassilva24/cidades-esg-inteligentes/actions/workflows/bdd-tests.yml>
+
+## Evidências
+
+Os prints de configuração e de execução ficam em [`docs/evidencias/`](docs/evidencias/):
+
+| Prefixo | Conteúdo |
+|---|---|
+| `config-*` | passo a passo de configuração (estrutura, `.env`, `pom.xml`, runner, passos, contratos, Docker, script, workflow) |
+| `01..04-*` | ambiente no ar, execução dos cenários, relatório HTML e resumo |
+| `exec-*` | execução 100% Docker, resultado por cenário, filtro por tag, requisições/respostas reais e prova de falha do contrato |
+| `ci-*` | pipeline no GitHub Actions: lista de execuções, resumo, etapas do job e log dos testes |
 
 ## Massa de dados
 
